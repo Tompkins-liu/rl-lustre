@@ -11,7 +11,7 @@ setup(
     # Project uses reStructuredText, so ensure that the docutils get
     # installed or upgraded on the target machine
     install_requires=['matplotlib',
-                      'numpy',
+                      'numpy==1.17',
                       'pyzmq',
                       'python-daemon',
                       'Sphinx',
@@ -30,7 +30,7 @@ setup(
     description="ASCAR Using Deep Reinforcement Learning",
     license="BSD",
     keywords="machine-learning",
-    url="https://ascar.io/",   # project home page, if any
+    url="https://ascar.io/",  # project home page, if any
 
     # could also include long_description, download_url, classifiers, etc.
 )

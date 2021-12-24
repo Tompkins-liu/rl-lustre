@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """ASCAR Deep Q Learning Daemon.
-
+用于运行核心算法
 Copyright (c) 2016, 2017 The Regents of the University of California. All
 rights reserved.
 
@@ -62,7 +62,6 @@ from .ascar_logging import *
 from .tf_rl.controller import DiscreteDeepQ
 from .tf_rl.models import MLP
 
-
 __author__ = 'Yan Li'
 __copyright__ = 'Copyright (c) 2016, 2017 The Regents of the University of California. All rights reserved.'
 
@@ -79,11 +78,13 @@ class DQLDaemon:
     """
     controller = None
     debugging_level = 0
-    delay_between_actions = 1           # seconds between actions
+    delay_between_actions = 1  # seconds between actions
     disable_training = False
     exploration_period = 5000
     opt = None
+    # 最后的观察
     last_observation = None
+    # 最后的动作
     last_action = None
     new_action = None
     save_path = None
@@ -97,6 +98,7 @@ class DQLDaemon:
         self.stop_requested = False
         self.stopped = True
         self.opt = opt
+        # 数据库位置
         self.save_path = os.path.dirname(opt['dbfile'])
         if game:
             self.game = game
@@ -158,7 +160,7 @@ class DQLDaemon:
 
             self.session.run(self.controller.target_network_update)
 
-            #checks if there is a model to be loaded before updating the graph
+            # checks if there is a model to be loaded before updating the graph
             if os.path.isfile(os.path.join(self.save_path, 'model')):
                 self.controller.restore(self.save_path)
                 logger.info('Loaded saved model from ' + self.save_path)
@@ -166,8 +168,6 @@ class DQLDaemon:
                 logger.info('No saved model found')
 
             self.test_number_of_steps_after_restore = self.controller.actions_executed_so_far
-
-
 
             # graph was not available when journalist was created
             journalist.add_graph(self.session.graph)
@@ -179,20 +179,23 @@ class DQLDaemon:
             last_checkpoint_time = time.time()
             while not self.stop_requested:
                 begin_time = time.time()
+                # 更新计算图
                 minibatch_size, prediction_error = self._do_training_step()
                 if minibatch_size > 0:
-                    if time.time() - last_checkpoint_time > 60*30:
+                    # 保存点（半小时）
+                    if time.time() - last_checkpoint_time > 60 * 30:
                         # Checkpoint every 30 minutes. TODO: make this a parameter.
                         cp_path = os.path.join(self.save_path, 'checkpoint_' + time.strftime('%Y-%m-%d_%H-%M-%S'))
                         os.mkdir(cp_path)
                         self.controller.save(cp_path)
                         last_checkpoint_time = time.time()
                         logger.info('Checkpoint saved in ' + cp_path)
+
                     last_training_step_duration = time.time() - begin_time
                     logger.info('Finished {step}th training step in {time} seconds '
                                 'using {mb} samples with prediction error {error}.'.format(
-                                    step=self.controller.iteration, time=last_training_step_duration, mb=minibatch_size,
-                                    error=prediction_error))
+                        step=self.controller.iteration, time=last_training_step_duration, mb=minibatch_size,
+                        error=prediction_error))
                 else:
                     logger.info('Not enough data for training yet.')
 
@@ -202,7 +205,7 @@ class DQLDaemon:
                     return
 
                 ts = time.time()
-                if ts - (last_action_second+0.5) >= self.delay_between_actions - last_training_step_duration:
+                if ts - (last_action_second + 0.5) >= self.delay_between_actions - last_training_step_duration:
                     if self.enable_tuning:
                         try:
                             self.game.refresh_memcache()
@@ -217,6 +220,7 @@ class DQLDaemon:
                         if sleep_time > 0.0001:
                             logger.debug('Sleeping {0} seconds'.format(sleep_time))
                             time.sleep(sleep_time)
+                        # 执行动作
                         self._do_action_step()
                         last_action_second = int(time.time())
                     else:

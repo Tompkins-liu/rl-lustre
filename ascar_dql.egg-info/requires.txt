@@ -1,0 +1,6 @@
+matplotlib
+numpy==1.17
+pyzmq
+python-daemon
+Sphinx
+sphinx_rtd_theme

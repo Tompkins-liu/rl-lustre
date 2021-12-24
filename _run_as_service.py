@@ -66,22 +66,26 @@ if len(sys.argv) < 3:
 class_name = sys.argv[1]
 
 # Import the conffile
+# 加载conf.py的opt
 spec = importlib.util.spec_from_file_location('conf', sys.argv[2])
 conf = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(conf)
 opt = conf.opt
 
 # Setup ASCAR
+# 设置日志
 logfile = opt[class_name + '_logfile'] if class_name + '_logfile' in opt.keys()\
           else '/var/log/{0}.log'.format(class_name)
 ascar.add_log_file(logfile, opt.get('log_lazy_flush', False))
 ascar.logger.setLevel(opt['loglevel'] if 'loglevel' in opt else logging.INFO)
 # Create an instance of class_name
+# 动态加载类 等价于 ascar.XXXDaemon.XXXDaemon(opt)
 class_name_parts = class_name.split('.')
 m = importlib.import_module('.'.join(class_name_parts[:-1]))
 m = getattr(m, class_name_parts[-1])
 app = m(conf.opt)
 
+# 守护进程参数设置
 pidfile_name = os.path.join(opt['pidfile_dir'] if 'pidfile_dir' in opt.keys() else '/var/run',
                             class_name + '.pid')
 pidfile = PIDLockFile(pidfile_name, timeout=-1)
@@ -105,6 +109,6 @@ context.signal_map = {
     }
 
 context.files_preserve = [ascar.ascar_logging.log_handler.stream]
-
+# 启动守护进程
 with context:
     app.start()

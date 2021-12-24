@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-"""ASCAR Interface Daemon"""
+"""ASCAR Interface Daemon
+用于接收、存储和聚合 MonitorAgent 的观察结果
+端口：默认 9123
+"""
 
 # Import system modules
 from copy import *
@@ -47,9 +50,9 @@ class IntfDaemon:
         if 'intf_daemon_loc' in opt.keys():
             self.port = int(opt['intf_daemon_loc'].split(':')[1])
         else:
+            # 默认端口 9123
             self.port = 9123
         self.store_action = store_action
-
     def _health_check(self) -> str:
         if not self.nodeid_map:
             result = 'nodeid_map is missing; '
@@ -156,6 +159,7 @@ class IntfDaemon:
         while True:
             flush_log()
             p = dict(poller.poll(1000))
+            # 广播动作/状态
             if self.socket in p:
                 ma_id = int(self.socket.recv())
                 req = pickle.loads(zlib.decompress(self.socket.recv()))
@@ -185,7 +189,7 @@ class IntfDaemon:
                 logger.debug('IntfDaemon stopped')
                 self.socket.close()
                 break
-
+            # 超过0.9秒发送广播
             # Use 0.9 here so we would still send out heartbeat if poll took something like 0.98 seconds
             if time.time() - heartbeat_ts > 0.9:
                 logger.debug('Broadcasting heartbeat')

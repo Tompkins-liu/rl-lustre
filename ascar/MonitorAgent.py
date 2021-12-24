@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """ASCAR Monitor Agent
-
+用于收集和设置client的参数值
 Copyright (c) 2016, 2017 The Regents of the University of California. All
 rights reserved.
 
@@ -50,6 +50,8 @@ __copyright__ = 'Copyright (c) 2016, 2017 The Regents of the University of Calif
 
 class MonitorAgent:
     """
+    这个代理将对系统进行采样并报告给intf-daemon
+
     This agent samples system performance indicators and reports them back to an :doc:`intf-daemon`
 
     :type collect_time_decimal: float
@@ -103,6 +105,9 @@ class MonitorAgent:
         self.send_obj([ts] + data)
 
     def connect(self):
+        """
+        通过zmq连接到intf守护进程
+        """
         if not self.context:
             self.context = zmq.Context()
         self.socket = self.context.socket(zmq.DEALER)
@@ -144,14 +149,17 @@ class MonitorAgent:
         try:
             logger.info('MA started')
             while not self.stopped:
+                # 一秒收集一次数据
                 if self.collectors:
                     ts = time.time()
+                    # 如果当前时间-（最后一次收集时间）>=0.99秒， 即一秒更新一次，每次在x.5秒时进行更新
                     if ts - (self.last_collect_second+self.collect_time_decimal) >= self.tick_len - 0.01:
                         # This must be updated *before* collecting to prevent the send time from
                         # slowly drifting away
                         self.last_collect_second = int(ts)
                         result = []
                         for c in self.collectors:
+                            # 收集和多个ost之间的信息
                             result.extend(c())
                         logger.info('Collected: ' + str(result))
                         self.timestamp_and_send_obj(result, ts)
