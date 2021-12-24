@@ -47,24 +47,24 @@ __copyright__ = 'Copyright (c) 2016, 2017 The Regents of the University of Calif
 """
 # 主机名映射
 nodeid_map = {
-    'node02': 1,
-    'node03': 2,
-    'node04': 3,
-    'node05': 4,
+    '192.168.1.11': 1,
+    '192.168.1.12': 2,
+    '192.168.1.13': 3,
+    '192.168.1.14': 4,
 }
 
 TICK_LEN = 1
 servers = [
-    'node02',
-    'node03',
+    '192.168.1.11',
+    '192.168.1.12',
 ]
 # client 观测参数数量
 PI_PER_CLIENT_OBD = 11
 # clint数量
 OBD_PER_CLIENT_MA = len(servers)
 clients = [
-    'node04',
-    'node05',
+    '192.168.1.13',
+    '192.168.1.14',
 ]
 # todo 控制方法的含义
 # 'mrif' max rpcs in flight osc到其ost的rpc的最大并发数
