@@ -216,7 +216,7 @@ class Lustre(object):
         logger.info('Loading cache')
         c = self.db.conn.cursor()
         # Use a large arraysize to increase read speed; we don't care about memory usage
-        c.arraysize = 1, 000, 000
+        c.arraysize = 1000000
         if not self.memcache:
             self.memcache = list()
         preloading_cache_size = len(self.memcache)
