@@ -2,6 +2,7 @@
 set -e -u
 cd `dirname $0`
 
+source /mnt/lustre/venv/bin/activate
 python -m unittest tests.test_common.TestCommon
 python -m unittest tests.test_intf_daemon.TestIntfDaemon
 python -m unittest tests.test_ReplayDB.TestReplayDB
